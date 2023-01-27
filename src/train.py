@@ -12,7 +12,8 @@ from model import DeepPunctuation, DeepPunctuationCRF
 from config import *
 import augmentation
 
-torch.multiprocessing.set_sharing_strategy('file_system')   # https://github.com/pytorch/pytorch/issues/11201
+# https://github.com/pytorch/pytorch/issues/11201
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 args = parse_arguments()
 
@@ -23,7 +24,8 @@ torch.backends.cudnn.benchmark = False
 np.random.seed(args.seed)
 
 # tokenizer
-tokenizer = MODELS[args.pretrained_model][1].from_pretrained(args.pretrained_model)
+tokenizer = MODELS[args.pretrained_model][1].from_pretrained(
+    args.pretrained_model)
 augmentation.tokenizer = tokenizer
 augmentation.sub_style = args.sub_style
 augmentation.alpha_sub = args.alpha_sub
@@ -45,7 +47,7 @@ if args.language == 'english':
                            token_style=token_style, is_train=False)
     test_set = [val_set, test_set_ref, test_set_asr]
 elif args.language == 'bangla':
-    train_set = Dataset(os.path.join(args.data_path, 'bn/train'), tokenizer=tokenizer, sequence_len=sequence_len,
+    train_set = Dataset(os.path.join(args.data_path, 'bn/bn_train2'), tokenizer=tokenizer, sequence_len=sequence_len,
                         token_style=token_style, is_train=True, augment_rate=ar, augment_type=aug_type)
     val_set = Dataset(os.path.join(args.data_path, 'bn/dev'), tokenizer=tokenizer, sequence_len=sequence_len,
                       token_style=token_style, is_train=False)
@@ -72,7 +74,8 @@ elif args.language == 'english-bangla':
                           token_style=token_style, is_train=False)
     test_bn_asr = Dataset(os.path.join(args.data_path, 'bn/test_asr'), tokenizer=tokenizer, sequence_len=sequence_len,
                           token_style=token_style, is_train=False)
-    test_set = [val_set, test_set_ref, test_set_asr, test_set_news, test_bn_ref, test_bn_asr]
+    test_set = [val_set, test_set_ref, test_set_asr,
+                test_set_news, test_bn_ref, test_bn_asr]
 else:
     raise ValueError('Incorrect language argument for Dataset')
 
@@ -84,7 +87,8 @@ data_loader_params = {
 }
 train_loader = torch.utils.data.DataLoader(train_set, **data_loader_params)
 val_loader = torch.utils.data.DataLoader(val_set, **data_loader_params)
-test_loaders = [torch.utils.data.DataLoader(x, **data_loader_params) for x in test_set]
+test_loaders = [torch.utils.data.DataLoader(
+    x, **data_loader_params) for x in test_set]
 
 # logs
 os.makedirs(args.save_path, exist_ok=True)
@@ -93,14 +97,18 @@ log_path = os.path.join(args.save_path, args.name + '_logs.txt')
 
 
 # Model
-device = torch.device('cuda' if (args.cuda and torch.cuda.is_available()) else 'cpu')
+device = torch.device('cuda' if (
+    args.cuda and torch.cuda.is_available()) else 'cpu')
 if args.use_crf:
-    deep_punctuation = DeepPunctuationCRF(args.pretrained_model, freeze_bert=args.freeze_bert, lstm_dim=args.lstm_dim)
+    deep_punctuation = DeepPunctuationCRF(
+        args.pretrained_model, freeze_bert=args.freeze_bert, lstm_dim=args.lstm_dim)
 else:
-    deep_punctuation = DeepPunctuation(args.pretrained_model, freeze_bert=args.freeze_bert, lstm_dim=args.lstm_dim)
+    deep_punctuation = DeepPunctuation(
+        args.pretrained_model, freeze_bert=args.freeze_bert, lstm_dim=args.lstm_dim)
 deep_punctuation.to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(deep_punctuation.parameters(), lr=args.lr, weight_decay=args.decay)
+optimizer = torch.optim.Adam(
+    deep_punctuation.parameters(), lr=args.lr, weight_decay=args.decay)
 
 
 def validate(data_loader):
@@ -114,7 +122,8 @@ def validate(data_loader):
     val_loss = 0
     with torch.no_grad():
         for x, y, att, y_mask in tqdm(data_loader, desc='eval'):
-            x, y, att, y_mask = x.to(device), y.to(device), att.to(device), y_mask.to(device)
+            x, y, att, y_mask = x.to(device), y.to(
+                device), att.to(device), y_mask.to(device)
             y_mask = y_mask.view(-1)
             if args.use_crf:
                 y_predict = deep_punctuation(x, att, y)
@@ -150,7 +159,8 @@ def test(data_loader):
     total = 0
     with torch.no_grad():
         for x, y, att, y_mask in tqdm(data_loader, desc='test'):
-            x, y, att, y_mask = x.to(device), y.to(device), att.to(device), y_mask.to(device)
+            x, y, att, y_mask = x.to(device), y.to(
+                device), att.to(device), y_mask.to(device)
             y_mask = y_mask.view(-1)
             if args.use_crf:
                 y_predict = deep_punctuation(x, att, y)
@@ -200,7 +210,8 @@ def train():
         total = 0
         deep_punctuation.train()
         for x, y, att, y_mask in tqdm(train_loader, desc='train'):
-            x, y, att, y_mask = x.to(device), y.to(device), att.to(device), y_mask.to(device)
+            x, y, att, y_mask = x.to(device), y.to(
+                device), att.to(device), y_mask.to(device)
             y_mask = y_mask.view(-1)
             if args.use_crf:
                 loss = deep_punctuation.log_likelihood(x, att, y)
@@ -222,7 +233,8 @@ def train():
             loss.backward()
 
             if args.gradient_clip > 0:
-                torch.nn.utils.clip_grad_norm_(deep_punctuation.parameters(), args.gradient_clip)
+                torch.nn.utils.clip_grad_norm_(
+                    deep_punctuation.parameters(), args.gradient_clip)
             optimizer.step()
 
             y_mask = y_mask.view(-1)
@@ -230,13 +242,15 @@ def train():
             total += torch.sum(y_mask).item()
 
         train_loss /= train_iteration
-        log = 'epoch: {}, Train loss: {}, Train accuracy: {}'.format(epoch, train_loss, correct / total)
+        log = 'epoch: {}, Train loss: {}, Train accuracy: {}'.format(
+            epoch, train_loss, correct / total)
         with open(log_path, 'a') as f:
             f.write(log + '\n')
         print(log)
 
         val_acc, val_loss = validate(val_loader)
-        log = 'epoch: {}, Val loss: {}, Val accuracy: {}'.format(epoch, val_loss, val_acc)
+        log = 'epoch: {}, Val loss: {}, Val accuracy: {}'.format(
+            epoch, val_loss, val_acc)
         with open(log_path, 'a') as f:
             f.write(log + '\n')
         print(log)
@@ -249,13 +263,15 @@ def train():
     for loader in test_loaders:
         precision, recall, f1, accuracy, cm = test(loader)
         log = 'Precision: ' + str(precision) + '\n' + 'Recall: ' + str(recall) + '\n' + 'F1 score: ' + str(f1) + \
-              '\n' + 'Accuracy:' + str(accuracy) + '\n' + 'Confusion Matrix' + str(cm) + '\n'
+              '\n' + 'Accuracy:' + str(accuracy) + '\n' + \
+            'Confusion Matrix' + str(cm) + '\n'
         print(log)
         with open(log_path, 'a') as f:
             f.write(log)
         log_text = ''
         for i in range(1, 5):
-            log_text += str(precision[i] * 100) + ' ' + str(recall[i] * 100) + ' ' + str(f1[i] * 100) + ' '
+            log_text += str(precision[i] * 100) + ' ' + \
+                str(recall[i] * 100) + ' ' + str(f1[i] * 100) + ' '
         with open(log_path, 'a') as f:
             f.write(log_text[:-1] + '\n\n')
 
