@@ -27,7 +27,7 @@ def parse_data(file_path, tokenizer, sequence_len, token_style):
             # loop until we have required sequence length
             # -1 because we will have a special end of sequence token at the end
             while len(x) < sequence_len - 1 and idx < len(lines):
-                word, punc = lines[idx].split('\t\t')
+                word, punc = lines[idx].split('\t')
                 tokens = tokenizer.tokenize(word)
                 # if taking these tokens exceeds sequence length we finish current sequence with padding
                 # then start next sequence from this token
