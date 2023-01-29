@@ -42,7 +42,8 @@ def parse_data(file_path, tokenizer, sequence_len, token_style):
                         x.append(tokenizer.convert_tokens_to_ids(tokens[-1]))
                     else:
                         x.append(TOKEN_IDX[token_style]['UNK'])
-                    y.append(punctuation_dict[punc])
+                    if punc in punctuation_dict.values():
+                        y.append(punctuation_dict[punc])
                     y_mask.append(1)
                     idx += 1
             x.append(TOKEN_IDX[token_style]['END_SEQ'])
