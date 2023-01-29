@@ -47,7 +47,7 @@ if args.language == 'english':
                            token_style=token_style, is_train=False)
     test_set = [val_set, test_set_ref, test_set_asr]
 elif args.language == 'bangla':
-    train_set = Dataset(os.path.join(args.data_path, 'bn/bn_train2'), tokenizer=tokenizer, sequence_len=sequence_len,
+    train_set = Dataset(os.path.join(args.data_path, 'bn/bn_train4'), tokenizer=tokenizer, sequence_len=sequence_len,
                         token_style=token_style, is_train=True, augment_rate=ar, augment_type=aug_type)
     val_set = Dataset(os.path.join(args.data_path, 'bn/dev'), tokenizer=tokenizer, sequence_len=sequence_len,
                       token_style=token_style, is_train=False)
