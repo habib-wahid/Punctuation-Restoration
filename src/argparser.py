@@ -27,7 +27,7 @@ def parse_arguments():
     parser.add_argument('--decay', default=0, type=float, help='weight decay (default: 0)')
     parser.add_argument('--gradient-clip', default=-1, type=float, help='gradient clipping (default: -1 i.e., none)')
     parser.add_argument('--batch-size', default=8, type=int, help='batch size (default: 8)')
-    parser.add_argument('--epoch', default=6, type=int, help='total epochs (default: 6)')
+    parser.add_argument('--epoch', default=15, type=int, help='total epochs (default: 15)')
     parser.add_argument('--save-path', default='out/', type=str, help='model and log save directory')
 
     args = parser.parse_args()
